@@ -23,9 +23,6 @@ COPY . fineract
 
 WORKDIR /fineract
 
-#RUN gsutil cp gs://fineract-404214-cred/fineract-404214-1eefd4b3e75f.json . && \
-#            mv fineract-404214-1eefd4b3e75f.json fineract.json
-
 RUN ./gradlew --no-daemon -q -x compileTestJava -x test -x spotlessJavaCheck -x spotlessJava bootJar
 
 WORKDIR /fineract
@@ -37,11 +34,6 @@ WORKDIR /fineract/BOOT-INF/lib
 RUN wget -q https://storage.cloud.google.com/fineract-404214-java-lib/mysql-connector-j-8.2.0/mysql-connector-j-8.2.0.jar
 RUN wget -q https://storage.googleapis.com/cloud-sql-connectors-java/v1.13.1/mysql-socket-factory-1.13.1-jar-with-dependencies.jar
 
-WORKDIR /root
-
-RUN wget https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 && \
-                                                      mv cloud_sql_proxy.linux.amd64 cloud_sql_proxy && \
-                                                      chmod +x cloud_sql_proxy
 
 # =========================================
 
@@ -53,20 +45,6 @@ COPY --from=builder /fineract/BOOT-INF/classes /app
 COPY --from=builder /fineract/fineract-provider/build/libs/ /app
 COPY --from=builder /root/cloud_sql_proxy /app
 COPY --from=builder /fineract/fineract.json /app
-
-#COPY entrypoint.sh /entrypoint.sh
-
-#RUN chmod 775 /entrypoint.sh
-
-#ENV CLOUD_SQL_INSTANCE=fineract-404214:europe-west2:fineract-instance
-#ENV CLOUD_SQL_USER=root
-#ENV CLOUD_SQL_PASSWORD=mysql
-#ENV CLOUD_SQL_SOCKET=/cloudsql/$CLOUD_SQL_INSTANCE
-
-#ENV fineract_tenants_driver=com.mysql.cj.jdbc.Driver
-#ENV fineract_tenants_url=jdbc:mysql://127.0.0.1:3306/fineract_tenants
-#ENV fineract_tenants_uid=root
-#ENV fineract_tenants_pwd=mysql
 
 # NOTE: node aware scheduler
 ENV FINERACT_NODE_ID=1
@@ -108,15 +86,10 @@ ENV FINERACT_DEFAULT_TENANTDB_NAME=fineract_default
 ENV FINERACT_DEFAULT_TENANTDB_DESCRIPTION='Default Demo Tenant'
 ENV JAVA_TOOL_OPTIONS="-Xmx4G"
 
-#WORKDIR /app
-
-#CMD ["./cloud_sql_proxy", "-instances=$CLOUD_SQL_INSTANCE=tcp:3306", "-credential_file=fineract.json"]
 
 WORKDIR /fineract
 
 ENTRYPOINT ["java", "-Dloader.path=.", "-jar", "/app/fineract-provider-0.0.1-SNAPSHOT.jar"]
 
-#EXPOSE 3306
 EXPOSE 8080
 
-#ENTRYPOINT ["/entrypoint.sh"]
